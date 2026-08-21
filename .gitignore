@@ -1,0 +1,73 @@
+# ─────────────────────────────────────────────────────────────
+# Secrets — never commit these.
+# backend/.env holds the live Supabase database password and the
+# JWT signing secrets. Commit only the .example files.
+# ─────────────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# ── Dependencies ────────────────────────────────────────────
+node_modules/
+.pnp
+.pnp.js
+.yarn/cache
+.yarn/unplugged
+.yarn/install-state.gz
+
+# ── Build output ────────────────────────────────────────────
+dist/
+build/
+out/
+.vite/
+*.tsbuildinfo
+
+# ── Logs & debug ────────────────────────────────────────────
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ── Runtime / user uploads ──────────────────────────────────
+uploads/
+tmp/
+temp/
+
+# ── Supabase CLI ────────────────────────────────────────────
+# Keep config.toml and migrations/ (they describe the schema);
+# .temp holds a downloaded CLI binary and local state.
+supabase/.temp/
+supabase/.branches/
+
+# ── Test & coverage ─────────────────────────────────────────
+coverage/
+.nyc_output/
+
+# ── Editors & OS ────────────────────────────────────────────
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Caches ──────────────────────────────────────────────────
+.cache/
+.eslintcache
+.parcel-cache/
+.npm/
+
+# ── Design handoff bundle ───────────────────────────────────
+# Export from Claude Design, kept locally only. Most of it is a snapshot of
+# the frontend as it was *before* the redesign, which would sit in the repo as
+# an outdated duplicate of src/. The design itself lives in Claude Design and
+# is already realised in the actual components.
+design-handoff/
+*.zip
