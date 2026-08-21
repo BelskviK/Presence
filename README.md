@@ -5,6 +5,7 @@ A full-stack employee attendance/check-in app with GPS geofencing, leave managem
 ## Tech Stack
 
 **Backend** (`backend/`)
+
 - Node.js (ESM) + Express 4
 - Supabase Postgres via `pg` (node-postgres), connected through the Supavisor session pooler
 - JWT auth (access + refresh tokens), bcryptjs password hashing
@@ -13,6 +14,7 @@ A full-stack employee attendance/check-in app with GPS geofencing, leave managem
 - Dev/test: nodemon, jest, supertest
 
 **Frontend** (`frontend/`)
+
 - React 18 + Vite, React Router 7
 - Zustand (auth state), axios (API client with auto token-refresh interceptor)
 - Tailwind CSS, logical (start/end) spacing throughout for RTL support
@@ -61,26 +63,26 @@ frontend/
 
 ## API Surface
 
-| Route | Auth | Notes |
-|---|---|---|
-| `POST /api/auth/register` | Admin | only an admin can create accounts |
-| `POST /api/auth/login` | — | |
-| `POST /api/auth/refresh` | — | rotate access token |
-| `GET /api/auth/me` | JWT | |
-| `GET /api/auth/users` | Manager/Admin | list all users (for pickers, employee management) |
-| `POST /api/auth/logout` | JWT | |
-| `POST /api/attendance/clock-in` / `clock-out` | JWT | rejects if outside geofence (unless `canCheckInFromAnywhere`); auto-flags stale open shifts |
-| `GET /api/attendance/today` \| `records` \| `summary` | JWT | employees see only their own |
-| `GET /api/attendance/active-now` | Manager/Admin | who's currently clocked in |
-| `PUT /api/attendance/:id` | Manager/Admin | manual correction |
-| `GET/POST/PUT/DELETE /api/geofence` | JWT / Admin | manage office locations |
-| `POST /api/geofence/:id/(add\|remove)-free-checkin` | Admin | exempt specific users from GPS |
-| `POST /api/leave` \| `GET /mine` \| `GET /balance` | JWT | submit / view own requests & balance |
-| `GET /api/leave?status=` | Manager/Admin | all requests, optional status filter |
-| `PUT /api/leave/:id/approve` \| `/reject` | Manager/Admin | decrements balance on approval |
-| `PUT /api/leave/:id/cancel` | JWT (owner) | cancel own pending request |
-| `GET /api/reports/attendance/excel` \| `/pdf` | JWT | `?userId=&year=&month=`; employees forced to their own userId |
-| `GET /api/health` | — | |
+| Route                                                 | Auth          | Notes                                                                                       |
+| ----------------------------------------------------- | ------------- | ------------------------------------------------------------------------------------------- |
+| `POST /api/auth/register`                             | Admin         | only an admin can create accounts                                                           |
+| `POST /api/auth/login`                                | —             |                                                                                             |
+| `POST /api/auth/refresh`                              | —             | rotate access token                                                                         |
+| `GET /api/auth/me`                                    | JWT           |                                                                                             |
+| `GET /api/auth/users`                                 | Manager/Admin | list all users (for pickers, employee management)                                           |
+| `POST /api/auth/logout`                               | JWT           |                                                                                             |
+| `POST /api/attendance/clock-in` / `clock-out`         | JWT           | rejects if outside geofence (unless `canCheckInFromAnywhere`); auto-flags stale open shifts |
+| `GET /api/attendance/today` \| `records` \| `summary` | JWT           | employees see only their own                                                                |
+| `GET /api/attendance/active-now`                      | Manager/Admin | who's currently clocked in                                                                  |
+| `PUT /api/attendance/:id`                             | Manager/Admin | manual correction                                                                           |
+| `GET/POST/PUT/DELETE /api/geofence`                   | JWT / Admin   | manage office locations                                                                     |
+| `POST /api/geofence/:id/(add\|remove)-free-checkin`   | Admin         | exempt specific users from GPS                                                              |
+| `POST /api/leave` \| `GET /mine` \| `GET /balance`    | JWT           | submit / view own requests & balance                                                        |
+| `GET /api/leave?status=`                              | Manager/Admin | all requests, optional status filter                                                        |
+| `PUT /api/leave/:id/approve` \| `/reject`             | Manager/Admin | decrements balance on approval                                                              |
+| `PUT /api/leave/:id/cancel`                           | JWT (owner)   | cancel own pending request                                                                  |
+| `GET /api/reports/attendance/excel` \| `/pdf`         | JWT           | `?userId=&year=&month=`; employees forced to their own userId                               |
+| `GET /api/health`                                     | —             |                                                                                             |
 
 ## Database (Supabase Postgres)
 
@@ -95,8 +97,28 @@ frontend/
 Since `/api/auth/register` requires an admin token, the very first admin is seeded directly via SQL: [backend/src/db/seed_admin.sql](backend/src/db/seed_admin.sql) (already applied).
 
 ```
-email:    admin@attendance.local
+email:    admin@attendance
 password: Admin@12345
+```
+
+```
+email:    john@attendance
+password: Employee@12345
+```
+
+```
+email:    anna@attendance
+password: Employee@12345
+```
+
+```
+email:    giorgi@attendance
+password: Employee@12345
+```
+
+```
+email:    levan@attendance
+password: Employee@12345
 ```
 
 Log in as this admin, then use the **Employees** page to create Manager/Employee accounts (each gets default leave balances automatically). Change this seed password's hash directly in the DB if needed — there's no self-service change-password endpoint yet.
@@ -123,6 +145,7 @@ Frontend `.env`: `VITE_API_URL` (defaults to `http://localhost:5000/api` if unse
 ## Current Status
 
 Implemented end-to-end and verified live (both via API calls and driving the actual UI in a browser):
+
 - Auth (admin-gated registration, login, JWT refresh)
 - Digital clock in/out with GPS geofencing, automatic hour/overtime calculation (midnight-safe), missing-clockout and double-clock-in edge cases
 - Leave requests with balance tracking, manager approve/reject, employee cancel
