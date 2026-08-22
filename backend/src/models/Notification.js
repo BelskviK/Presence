@@ -2,20 +2,20 @@ import { query } from '../config/database.js';
 import { rowToCamel, rowsToCamel } from '../utils/rowMapper.js';
 
 export const Notification = {
-  async create({ userId, type, title, message, relatedEntity, relatedId }) {
+  async create({ userId, type, title, message, relatedEntity, relatedId, meta }) {
     const { rows } = await query(
-      `insert into notifications (user_id, type, title, message, related_entity, related_id)
-       values ($1, $2, $3, $4, $5, $6)
+      `insert into notifications (user_id, type, title, message, related_entity, related_id, meta)
+       values ($1, $2, $3, $4, $5, $6, $7)
        returning *`,
-      [userId, type, title, message, relatedEntity || null, relatedId || null]
+      [userId, type, title, message, relatedEntity || null, relatedId || null, meta ? JSON.stringify(meta) : null]
     );
     return rowToCamel(rows[0]);
   },
 
   // Fan out the same notification to several users (e.g. all managers/admins).
-  async createForUsers(userIds, { type, title, message, relatedEntity, relatedId }) {
+  async createForUsers(userIds, { type, title, message, relatedEntity, relatedId, meta }) {
     await Promise.all(
-      userIds.map((userId) => this.create({ userId, type, title, message, relatedEntity, relatedId }))
+      userIds.map((userId) => this.create({ userId, type, title, message, relatedEntity, relatedId, meta }))
     );
   },
 

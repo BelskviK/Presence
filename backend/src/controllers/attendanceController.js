@@ -58,16 +58,23 @@ export const clockIn = asyncHandler(async (req, res) => {
   }
 
   const today = startOfToday();
-  const flaggedCount = await Attendance.flagStaleOpenShifts(userId, today);
-  if (flaggedCount > 0) {
-    await Notification.create({
-      userId,
-      type: 'ATTENDANCE_MISSING_CLOCKOUT',
-      title: 'Missing clock-out detected',
-      message: `You forgot to clock out on a previous shift. Ask a manager to correct it.`,
-      relatedEntity: 'ATTENDANCE',
-    });
-  }
+  const flagged = await Attendance.flagStaleOpenShifts(userId, today);
+  // One notification per flagged shift, each pointing at the specific record so
+  // the UI can jump straight to it.
+  await Promise.all(
+    flagged.map((shift) => {
+      const shiftDate = shift.date instanceof Date ? shift.date.toISOString().slice(0, 10) : String(shift.date).slice(0, 10);
+      return Notification.create({
+        userId,
+        type: 'ATTENDANCE_MISSING_CLOCKOUT',
+        title: 'Missing clock-out detected',
+        message: `You forgot to clock out on your shift of ${shiftDate}. Ask a manager to correct it.`,
+        relatedEntity: 'ATTENDANCE',
+        relatedId: shift.id,
+        meta: { date: shiftDate },
+      });
+    })
+  );
   const openSession = await Attendance.findOpenToday(userId, today);
 
   if (openSession) {

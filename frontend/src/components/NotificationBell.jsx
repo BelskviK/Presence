@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { formatDistanceToNow } from 'date-fns';
 import notificationService from '../services/notificationService';
@@ -11,12 +12,30 @@ const TYPE_ICON = {
   ATTENDANCE_MISSING_CLOCKOUT: 'clock',
 };
 
+// Where a notification should take the user: the page holding the record, with
+// the record's id in `?highlight=` so that page can flash it. Attendance also
+// needs the date, since it loads a month at a time.
+const targetOf = (n) => {
+  if (!n.relatedId) return null;
+  if (n.relatedEntity === 'LEAVE') return `/leave?highlight=${n.relatedId}`;
+  if (n.relatedEntity === 'ATTENDANCE') {
+    const date = n.meta?.date ? `&date=${n.meta.date}` : '';
+    return `/attendance?highlight=${n.relatedId}${date}`;
+  }
+  return null;
+};
+
 export default function NotificationBell() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const ref = useRef(null);
+  const btnRef = useRef(null);
+  // Below this width the panel is too wide to hang off the bell, so it becomes
+  // a viewport-centred sheet instead. Null = anchored to the bell as usual.
+  const [sheetTop, setSheetTop] = useState(null);
 
   const load = async () => {
     try {
@@ -42,7 +61,31 @@ export default function NotificationBell() {
     return () => document.removeEventListener('mousedown', onClickOutside);
   }, []);
 
+  useLayoutEffect(() => {
+    if (!open) return undefined;
+    const reposition = () => {
+      const narrow = window.innerWidth < 720;
+      if (!narrow || !btnRef.current) {
+        setSheetTop(null);
+        return;
+      }
+      setSheetTop(btnRef.current.getBoundingClientRect().bottom + 8);
+    };
+    reposition();
+    window.addEventListener('resize', reposition);
+    window.addEventListener('scroll', reposition, true);
+    return () => {
+      window.removeEventListener('resize', reposition);
+      window.removeEventListener('scroll', reposition, true);
+    };
+  }, [open]);
+
   const handleItemClick = async (n) => {
+    const target = targetOf(n);
+    if (target) {
+      setOpen(false);
+      navigate(target);
+    }
     if (!n.isRead) {
       await notificationService.markRead(n.id);
       setNotifications((list) => list.map((x) => (x.id === n.id ? { ...x, isRead: true } : x)));
@@ -59,6 +102,7 @@ export default function NotificationBell() {
   return (
     <div className="relative" ref={ref}>
       <button
+        ref={btnRef}
         type="button"
         onClick={() => setOpen((o) => !o)}
         className="btn btn-ghost btn-icon relative"
@@ -75,8 +119,18 @@ export default function NotificationBell() {
 
       {open && (
         <div
-          className="absolute end-0 mt-2 w-80 max-h-96 overflow-y-auto fade-in card"
-          style={{ zIndex: 50, background: 'var(--color-bg)', boxShadow: 'var(--shadow-lg)', padding: 0 }}
+          className={
+            sheetTop !== null
+              ? 'fixed left-1/2 -translate-x-1/2 w-[calc(100vw-24px)] max-w-[380px] max-h-[70vh] overflow-y-auto no-scrollbar fade-in card'
+              : 'absolute end-0 mt-2 w-80 max-h-96 overflow-y-auto no-scrollbar fade-in card'
+          }
+          style={{
+            zIndex: 50,
+            background: 'var(--color-bg)',
+            boxShadow: 'var(--shadow-lg)',
+            padding: 0,
+            ...(sheetTop !== null ? { top: sheetTop } : {}),
+          }}
         >
           <div className="flex items-center justify-between px-4 py-3 sticky top-0" style={{ borderBottom: '1px solid var(--color-divider)', background: 'var(--color-bg)' }}>
             <span style={{ fontFamily: 'var(--font-heading)', fontSize: 13, fontWeight: 500 }}>{t('common.notifications')}</span>

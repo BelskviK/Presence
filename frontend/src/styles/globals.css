@@ -119,6 +119,18 @@ svg.lucide, .icon { flex: none; }
   .fade-in { animation: fadeIn 0.2s ease-in; }
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
+  /* Hides the scrollbar chrome while keeping the area scrollable (wheel,
+     touch, keyboard and programmatic scrolling all still work). */
+  .no-scrollbar {
+    scrollbar-width: none;        /* Firefox */
+    -ms-overflow-style: none;     /* legacy Edge */
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;                /* Chrome, Safari */
+  }
+
   /* Loading placeholder. Occupies the same space the real content will, so
      cards don't jump when data arrives. */
   .skeleton {
@@ -241,8 +253,30 @@ svg.lucide, .icon { flex: none; }
   .dialog {
     width: min(480px, 100%); display: flex; flex-direction: column; gap: 12px;
     padding: 20px; border-radius: 18px; max-height: 90vh; overflow-y: auto;
+    scrollbar-width: none; -ms-overflow-style: none;
     background: var(--color-bg); box-shadow: var(--shadow-lg);
   }
+  .dialog::-webkit-scrollbar { width: 0; height: 0; display: none; }
   .dialog-title { font-family: var(--font-heading); font-weight: 500; font-size: 20px; }
   .dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
+}
+
+/* — notification deep-link highlight —
+   Applied to the row/card a notification pointed at, so the user's eye lands on
+   it immediately. Fades itself out; the class is dropped shortly after. */
+@keyframes highlight-flash {
+  0%, 65% { background-color: var(--color-accent-100); }
+  100%    { background-color: transparent; }
+}
+@keyframes highlight-ring {
+  0%, 65% { box-shadow: 0 0 0 2px var(--color-accent); }
+  100%    { box-shadow: 0 0 0 2px transparent; }
+}
+.highlight-flash,
+.highlight-flash > td { animation: highlight-flash 4s ease-out forwards; }
+.highlight-ring { animation: highlight-ring 4s ease-out forwards; }
+
+@media (prefers-reduced-motion: reduce) {
+  .highlight-flash, .highlight-flash > td { animation: none; background-color: var(--color-accent-100); }
+  .highlight-ring { animation: none; box-shadow: 0 0 0 2px var(--color-accent); }
 }

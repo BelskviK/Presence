@@ -26,7 +26,7 @@ export default function PendingApprovalsCard({ approvals = [], total = 0, onAct,
         </p>
       ) : (
         <>
-          <div className="flex flex-col max-h-[320px] overflow-y-auto">
+          <div className="flex flex-col max-h-[320px] overflow-y-auto no-scrollbar">
             {approvals.map((a) => (
               <div
                 key={a.id}

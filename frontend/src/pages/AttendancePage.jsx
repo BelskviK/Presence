@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { format, startOfMonth, endOfMonth, addMonths, getDay, isToday, isFuture, isWeekend, startOfWeek, addDays } from 'date-fns';
 import { dateLocale } from '../utils/dateLocale';
@@ -11,6 +12,7 @@ import { reportService } from '../services/reportService';
 import Icon from '../components/Icon';
 import StatusBadge from '../components/StatusBadge';
 import { Skeleton } from '../components/Skeleton';
+import { useHighlight } from '../hooks/useHighlight';
 
 // Weekday headers come from the active locale rather than a hardcoded list,
 // so the calendar reads correctly in every language.
@@ -20,6 +22,12 @@ const dowNames = () => {
 };
 const ymd = (d) => format(new Date(d), 'yyyy-MM-dd');
 const idOf = (u) => (typeof u === 'object' && u !== null ? u.id : u);
+// Built from the parts so a plain YYYY-MM-DD is read as a local date; `new Date(str)`
+// would treat it as UTC midnight and land on the previous day west of Greenwich.
+const parseYmd = (s) => {
+  const [y, m, d] = s.split('-').map(Number);
+  return new Date(y, m - 1, d);
+};
 const nameOf = (u) => (typeof u === 'object' && u !== null ? `${u.firstName} ${u.lastName}` : '—');
 
 function EditModal({ record, onClose, onSaved }) {
@@ -78,13 +86,20 @@ export default function AttendancePage() {
   const isAdmin = user?.role === 'ADMIN';
   const isManager = user?.role === 'MANAGER' || isAdmin;
 
+  // A notification can deep-link to one attendance record: `date` says which
+  // month/day to open, `highlight` which record to flash.
+  const [searchParams] = useSearchParams();
+  const highlightId = useHighlight();
+  const linkedDate = searchParams.get('date');
+  const highlightRef = useRef(null);
+
   const [view, setView] = useState('calendar');
-  const [monthDate, setMonthDate] = useState(startOfMonth(new Date()));
+  const [monthDate, setMonthDate] = useState(() => startOfMonth(linkedDate ? parseYmd(linkedDate) : new Date()));
   const [employees, setEmployees] = useState([]);
   const [selectedUserId, setSelectedUserId] = useState(isAdmin ? '' : user?.id);
   const [records, setRecords] = useState([]);
   const [leaveDays, setLeaveDays] = useState([]);
-  const [selectedDay, setSelectedDay] = useState(new Date().getDate());
+  const [selectedDay, setSelectedDay] = useState(() => (linkedDate ? parseYmd(linkedDate) : new Date()).getDate());
   const [editing, setEditing] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -122,6 +137,13 @@ export default function AttendancePage() {
   useEffect(() => {
     if (isManager) userService.getAll().then(setEmployees).catch(() => {});
   }, [isManager]);
+
+  // Scroll the deep-linked record into view once the month's data has rendered.
+  useEffect(() => {
+    if (highlightId && !loading && highlightRef.current) {
+      highlightRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [highlightId, loading, records, view]);
 
   const dayInfo = (day) => {
     const date = new Date(monthDate.getFullYear(), monthDate.getMonth(), day);
@@ -245,12 +267,13 @@ export default function AttendancePage() {
                 if (!day) return <div key={i} className="min-h-[56px] sm:min-h-[86px]" />;
                 const info = dayInfo(day);
                 const on = selectedDay === day;
+                const flagged = highlightId && info.dayRecords.some((r) => r.id === highlightId);
                 const bg = info.isWeekend ? 'color-mix(in srgb, var(--color-text) 3%, transparent)' : on ? 'var(--color-accent-100)' : 'transparent';
                 return (
                   <button
                     key={i}
                     onClick={() => setSelectedDay(day)}
-                    className="flex flex-col gap-1 text-start min-h-[56px] sm:min-h-[86px] p-1 sm:p-2 rounded-lg sm:rounded-xl"
+                    className={`flex flex-col gap-1 text-start min-h-[56px] sm:min-h-[86px] p-1 sm:p-2 rounded-lg sm:rounded-xl${flagged ? ' highlight-ring' : ''}`}
                     style={{
                       cursor: 'pointer',
                       border: `1px solid ${on ? 'var(--color-accent)' : 'color-mix(in srgb, var(--color-text) 9%, transparent)'}`,
@@ -304,7 +327,10 @@ export default function AttendancePage() {
                 <>
                   <Row k={t('attendance.working')} v={sel.workerIds.length} strong />
                   {sel.dayRecords.map((r) => (
-                    <div key={r.id} className="flex items-center justify-between gap-2 py-1.5" style={{ fontSize: 12, borderTop: '1px solid color-mix(in srgb, var(--color-text) 8%, transparent)' }}>
+                    <div
+                      key={r.id}
+                      ref={r.id === highlightId ? highlightRef : null}
+                      className={`flex items-center justify-between gap-2 py-1.5${r.id === highlightId ? ' highlight-flash' : ''}`} style={{ fontSize: 12, borderTop: '1px solid color-mix(in srgb, var(--color-text) 8%, transparent)' }}>
                       <span className="truncate">{nameOf(r.userId)}</span>
                       <span className="flex items-center gap-2 shrink-0">
                         <span style={{ fontVariantNumeric: 'tabular-nums', color: 'var(--color-neutral-700)' }}>{Number(r.totalHours || 0).toFixed(2)}h</span>
@@ -336,7 +362,11 @@ export default function AttendancePage() {
                 </>
               ) : (
                 sel.dayRecords.map((r) => (
-                  <div key={r.id}>
+                  <div
+                    key={r.id}
+                    ref={r.id === highlightId ? highlightRef : null}
+                    className={r.id === highlightId ? 'highlight-flash rounded-xl px-2' : undefined}
+                  >
                     <Row k={t('attendance.clockInTime')} v={r.clockInTime ? format(new Date(r.clockInTime), 'HH:mm') : '-'} />
                     <Row k={t('attendance.clockOutTime')} v={r.clockOutTime ? format(new Date(r.clockOutTime), 'HH:mm') : '—'} />
                     <Row k={t('attendance.breakMinutes')} v={`${Math.round(r.breakMinutes || 0)} min`} />
@@ -380,7 +410,11 @@ export default function AttendancePage() {
               </thead>
               <tbody>
                 {records.map((r) => (
-                  <tr key={r.id}>
+                  <tr
+                    key={r.id}
+                    ref={r.id === highlightId ? highlightRef : null}
+                    className={r.id === highlightId ? 'highlight-flash' : undefined}
+                  >
                     <td className="whitespace-nowrap">{format(new Date(r.date), 'MMM d, yyyy', { locale: dateLocale() })}</td>
                     {isTeamView && <td className="whitespace-nowrap">{nameOf(r.userId)}</td>}
                     <td>{r.clockInTime ? format(new Date(r.clockInTime), 'HH:mm') : '-'}</td>

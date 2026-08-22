@@ -58,10 +58,12 @@ export const Attendance = {
       `update attendance
        set status = 'MISSING_CLOCKOUT'
        where user_id = $1 and date < $2 and clock_out_time is null and status != 'MISSING_CLOCKOUT'
-       returning id`,
+       returning id, date`,
       [userId, beforeDate]
     );
-    return rows.length;
+    // Returns the flagged rows (not just a count) so the caller can raise a
+    // notification that deep-links to the exact shift.
+    return rowsToCamel(rows);
   },
 
   async startBreak(id) {

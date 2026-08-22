@@ -98,7 +98,7 @@ export default function PresentNowWidget({ className = '' }) {
       ) : people.length === 0 ? (
         <p style={{ fontSize: 13, color: 'var(--color-neutral-600)' }}>{t('common.noOneClockedIn')}</p>
       ) : (
-        <div className="flex flex-col max-h-[360px] overflow-y-auto">
+        <div className="flex flex-col max-h-[360px] overflow-y-auto no-scrollbar">
           {people.map(({ user, sessions, workedMs, breakMs, status }) => {
             const tasks = demoTaskCounts(user.id);
             const segments = buildTimeline(sessions, now);

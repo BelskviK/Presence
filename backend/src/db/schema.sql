@@ -174,6 +174,8 @@ create table if not exists notifications (
   message text not null,
   related_entity text,
   related_id uuid,
+  -- Extra context the UI needs to deep-link to the record (e.g. {"date": "..."}).
+  meta jsonb,
   is_read boolean not null default false,
   created_at timestamptz not null default now()
 );

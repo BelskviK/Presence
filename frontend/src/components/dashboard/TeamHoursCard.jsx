@@ -31,7 +31,7 @@ export default function TeamHoursCard({ byEmployee = [], loading = false, classN
       ) : byEmployee.length === 0 ? (
         <p style={{ fontSize: 13, color: 'var(--color-neutral-600)' }}>{t('reports.noData')}</p>
       ) : (
-        <div className="flex flex-col max-h-[360px] overflow-y-auto">
+        <div className="flex flex-col max-h-[360px] overflow-y-auto no-scrollbar">
         {byEmployee.map((e) => {
           const hours = Number(e.hours);
           const ot = Number(e.overtime);

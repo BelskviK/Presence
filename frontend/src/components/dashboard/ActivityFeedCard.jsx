@@ -59,7 +59,7 @@ export default function ActivityFeedCard({ className = '' }) {
       ) : activity.length === 0 ? (
         <p style={{ fontSize: 13, color: 'var(--color-neutral-600)' }}>{t('dashboard.noActivity')}</p>
       ) : (
-        <div className="flex flex-col max-h-80 overflow-y-auto">
+        <div className="flex flex-col max-h-80 overflow-y-auto no-scrollbar">
           {activity.map((a) => (
             <div
               key={a.id}
