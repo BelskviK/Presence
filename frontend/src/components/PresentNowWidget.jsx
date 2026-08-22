@@ -6,6 +6,7 @@ import { attendanceService } from '../services/attendanceService';
 import useAuthStore from '../store/authStore';
 import { buildTimeline, summariseDay, formatDuration } from '../utils/timeline';
 import { demoTaskCounts } from '../utils/demoTasks';
+import { Skeleton } from './Skeleton';
 
 const STATUS_TAG = {
   WORKING: 'tag tag-accent',
@@ -72,11 +73,28 @@ export default function PresentNowWidget({ className = '' }) {
     <section className={`card blueprint ${className}`}>
       <div className="flex items-baseline justify-between">
         <h6 style={{ margin: 0, color: 'var(--color-accent)' }}>{t('common.presentNow')}</h6>
-        <span style={{ fontFamily: 'var(--font-heading)', fontSize: 15 }}>{onSiteCount} / {people.length}</span>
+        {loading
+          ? <Skeleton w={40} h={15} />
+          : <span style={{ fontFamily: 'var(--font-heading)', fontSize: 15 }}>{onSiteCount} / {people.length}</span>}
       </div>
 
       {loading ? (
-        <p style={{ fontSize: 13, color: 'var(--color-neutral-600)' }}>{t('common.loading')}</p>
+        <div className="flex flex-col">
+          {Array.from({ length: 3 }, (_, i) => (
+            <div key={i} className="py-2.5" style={{ borderTop: '1px solid color-mix(in srgb, var(--color-text) 8%, transparent)' }}>
+              <div className="flex items-center gap-2.5">
+                <Skeleton w={28} h={28} style={{ borderRadius: '50%', flex: 'none' }} />
+                <span className="flex-1 min-w-0 flex flex-col gap-1.5">
+                  <Skeleton w="55%" h={11} />
+                  <Skeleton w="35%" h={9} />
+                </span>
+                <Skeleton w={62} h={16} style={{ borderRadius: 999, flex: 'none' }} />
+              </div>
+              <div className="mt-2"><Skeleton h={10} style={{ borderRadius: 6 }} /></div>
+              <div className="mt-1.5"><Skeleton w="70%" h={9} /></div>
+            </div>
+          ))}
+        </div>
       ) : people.length === 0 ? (
         <p style={{ fontSize: 13, color: 'var(--color-neutral-600)' }}>{t('common.noOneClockedIn')}</p>
       ) : (

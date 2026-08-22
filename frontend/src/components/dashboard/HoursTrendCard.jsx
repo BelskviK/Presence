@@ -1,10 +1,11 @@
 import { useTranslation } from 'react-i18next';
 import { format, subDays, isSameDay } from 'date-fns';
 import { dateLocale } from '../../utils/dateLocale';
+import { Skeleton, SkeletonChart } from '../Skeleton';
 
 // Fourteen-day team output. Days with no data are drawn as empty slots rather
 // than skipped, so gaps (weekends, shutdowns) stay visible.
-export default function HoursTrendCard({ trend = [], className = '' }) {
+export default function HoursTrendCard({ trend = [], loading = false, className = '' }) {
   const { t } = useTranslation();
 
   const days = Array.from({ length: 14 }, (_, i) => {
@@ -17,6 +18,21 @@ export default function HoursTrendCard({ trend = [], className = '' }) {
   const total = days.reduce((s, d) => s + d.hours, 0);
   const activeDays = days.filter((d) => d.hours > 0).length;
   const avg = activeDays ? total / activeDays : 0;
+
+  if (loading) {
+    return (
+      <section className={`card ${className}`}>
+        <div className="flex items-baseline justify-between flex-wrap gap-2">
+          <div className="flex flex-col gap-1.5">
+            <h6 style={{ margin: 0, color: 'var(--color-accent)' }}>{t('dashboard.hoursTrend')}</h6>
+            <Skeleton w={150} h={20} />
+          </div>
+          <Skeleton w={92} h={20} style={{ borderRadius: 999 }} />
+        </div>
+        <div className="mt-3"><SkeletonChart bars={14} height={120} /></div>
+      </section>
+    );
+  }
 
   return (
     <section className={`card ${className}`}>

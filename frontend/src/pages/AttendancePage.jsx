@@ -10,6 +10,7 @@ import { userService } from '../services/userService';
 import { reportService } from '../services/reportService';
 import Icon from '../components/Icon';
 import StatusBadge from '../components/StatusBadge';
+import { Skeleton } from '../components/Skeleton';
 
 // Weekday headers come from the active locale rather than a hardcoded list,
 // so the calendar reads correctly in every language.
@@ -196,7 +197,43 @@ export default function AttendancePage() {
       </div>
 
       {loading ? (
-        <p style={{ fontSize: 13, color: 'var(--color-neutral-600)' }}>{t('common.loading')}</p>
+        <div className="grid gap-6 items-start grid-cols-1 lg:grid-cols-[minmax(0,1fr)_304px]">
+          <section className="card blueprint p-2 sm:p-4">
+            <div className="grid gap-px" style={{ gridTemplateColumns: 'repeat(7, minmax(0,1fr))' }}>
+              {Array.from({ length: 7 }, (_, i) => (
+                <div key={`h${i}`} style={{ padding: '0 2px 8px' }}><Skeleton w={26} h={9} /></div>
+              ))}
+              {Array.from({ length: 35 }, (_, i) => (
+                <div
+                  key={i}
+                  className="min-h-[56px] sm:min-h-[86px] p-1 sm:p-2 rounded-lg sm:rounded-xl"
+                  style={{ border: '1px solid color-mix(in srgb, var(--color-text) 9%, transparent)' }}
+                >
+                  <Skeleton w={14} h={11} />
+                </div>
+              ))}
+            </div>
+          </section>
+          <section className="flex flex-col gap-4">
+            <div className="card p-4">
+              <Skeleton w={90} h={11} />
+              <div className="mt-2 mb-3"><Skeleton w={150} h={20} /></div>
+              {Array.from({ length: 4 }, (_, i) => (
+                <div key={i} className="flex justify-between py-2" style={{ borderTop: '1px solid color-mix(in srgb, var(--color-text) 8%, transparent)' }}>
+                  <Skeleton w={92} h={10} /><Skeleton w={52} h={10} />
+                </div>
+              ))}
+            </div>
+            <div className="card p-4">
+              <Skeleton w={110} h={11} />
+              {Array.from({ length: 4 }, (_, i) => (
+                <div key={i} className="flex justify-between py-2" style={{ borderTop: '1px solid color-mix(in srgb, var(--color-text) 8%, transparent)' }}>
+                  <Skeleton w={84} h={10} /><Skeleton w={38} h={10} />
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
       ) : view === 'calendar' ? (
         <div className="grid gap-6 items-start grid-cols-1 lg:grid-cols-[minmax(0,1fr)_304px]">
           <section className="card blueprint p-2 sm:p-4">

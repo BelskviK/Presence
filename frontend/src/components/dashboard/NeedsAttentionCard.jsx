@@ -2,12 +2,25 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import Icon from '../Icon';
+import { SkeletonRows } from '../Skeleton';
 
 // The "things an employer should actually act on" panel. Each row links to
 // wherever the problem gets fixed, and the card stays quiet when all is well.
-export default function NeedsAttentionCard({ exceptions, pendingLeave = 0, className = '' }) {
+export default function NeedsAttentionCard({ exceptions, pendingLeave = 0, loading = false, className = '' }) {
   const { t } = useTranslation();
-  if (!exceptions) return null;
+
+  // Renders a placeholder rather than null while loading — returning null made
+  // the whole card pop into existence and shove the grid around.
+  if (loading || !exceptions) {
+    return (
+      <section className={`card blueprint ${className}`}>
+        <div className="flex items-baseline justify-between">
+          <h6 style={{ margin: 0, color: 'var(--color-accent)' }}>{t('dashboard.needsAttention')}</h6>
+        </div>
+        <SkeletonRows count={3} avatar={false} trailing />
+      </section>
+    );
+  }
 
   const { missingClockouts = 0, staleOpenShifts = [], noOffice = [], neverLoggedIn = 0 } = exceptions;
 

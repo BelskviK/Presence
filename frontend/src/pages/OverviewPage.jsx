@@ -18,6 +18,7 @@ import ActivityFeedCard from '../components/dashboard/ActivityFeedCard';
 import PendingApprovalsCard from '../components/dashboard/PendingApprovalsCard';
 import dashboardService from '../services/dashboardService';
 import { buildTimeline, dayTicks } from '../utils/timeline';
+import { Skeleton, SkeletonRows } from '../components/Skeleton';
 
 const StatCard = ({ label, value, unit, pct, note }) => (
   <div className="card">
@@ -50,6 +51,7 @@ export default function OverviewPage() {
   const [officeName, setOfficeName] = useState(null);
   const [dash, setDash] = useState(null);
   const [pendingCount, setPendingCount] = useState(0);
+  const [dashLoading, setDashLoading] = useState(true);
 
   const load = useCallback(async () => {
     const start = format(startOfMonth(new Date()), 'yyyy-MM-dd');
@@ -98,7 +100,10 @@ export default function OverviewPage() {
       const users = await userService.getAll();
       setEmployeeCount(users.length);
       // One aggregated call rather than a per-employee fan-out.
-      dashboardService.getDashboard().then(setDash).catch(() => {});
+      dashboardService.getDashboard()
+        .then(setDash)
+        .catch(() => {})
+        .finally(() => setDashLoading(false));
     }
   }, [isManager, isAdmin, user?.id]);
 
@@ -250,17 +255,18 @@ export default function OverviewPage() {
             md (2 cols): trend / attention+present / approvals+activity / hours / away */}
       {isManager && (
         <div className="grid gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-          <HoursTrendCard trend={dash?.trend} className="md:col-span-2" />
-          <NeedsAttentionCard exceptions={dash?.exceptions} pendingLeave={pendingCount} />
+          <HoursTrendCard trend={dash?.trend} loading={dashLoading} className="md:col-span-2" />
+          <NeedsAttentionCard exceptions={dash?.exceptions} pendingLeave={pendingCount} loading={dashLoading} />
 
           <PresentNowWidget />
-          <PendingApprovalsCard approvals={approvals} total={pendingCount} onAct={act} />
+          <PendingApprovalsCard approvals={approvals} total={pendingCount} onAct={act} loading={dashLoading} />
           <ActivityFeedCard />
 
-          <TeamHoursCard byEmployee={dash?.byEmployee} className="md:col-span-2" />
+          <TeamHoursCard byEmployee={dash?.byEmployee} loading={dashLoading} className="md:col-span-2" />
           <UpcomingAwayCard
             upcoming={dash?.upcomingLeave}
             liability={dash?.leaveLiability}
+            loading={dashLoading}
             className="md:col-span-2 xl:col-span-1"
           />
         </div>
@@ -271,7 +277,7 @@ export default function OverviewPage() {
 
 // Who's off in the next fortnight, plus how much leave the company still owes
 // — the two leave numbers a manager actually plans around.
-function UpcomingAwayCard({ upcoming = [], liability = [], className = '' }) {
+function UpcomingAwayCard({ upcoming = [], liability = [], loading = false, className = '' }) {
   const { t } = useTranslation();
   const vacation = liability.find((l) => l.leaveType === 'VACATION');
 
@@ -279,14 +285,18 @@ function UpcomingAwayCard({ upcoming = [], liability = [], className = '' }) {
     <section className={`card ${className}`}>
       <div className="flex items-baseline justify-between flex-wrap gap-2">
         <h6 style={{ margin: 0, color: 'var(--color-accent)' }}>{t('dashboard.awayNext14')}</h6>
-        {vacation && (
+        {loading ? (
+          <Skeleton w={110} h={20} style={{ borderRadius: 999 }} />
+        ) : vacation && (
           <span className="tag tag-neutral">
             {t('dashboard.leaveLiability')} {Number(vacation.remaining).toFixed(0)} {t('dashboard.days')}
           </span>
         )}
       </div>
 
-      {upcoming.length === 0 ? (
+      {loading ? (
+        <SkeletonRows count={3} />
+      ) : upcoming.length === 0 ? (
         <p style={{ fontSize: 13, color: 'var(--color-neutral-600)' }}>{t('reports.noData')}</p>
       ) : (
         upcoming.map((o) => (

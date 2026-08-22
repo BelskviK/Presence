@@ -6,6 +6,7 @@ import { geofenceService } from '../services/geofenceService';
 import { attendanceService } from '../services/attendanceService';
 import { leaveService } from '../services/leaveService';
 import Icon from '../components/Icon';
+import { SkeletonRow } from '../components/Skeleton';
 
 const ROLES = ['EMPLOYEE', 'MANAGER', 'ADMIN'];
 const ROLE_TAG_CLASS = { ADMIN: 'tag tag-accent', MANAGER: 'tag tag-accent-2', EMPLOYEE: 'tag tag-neutral' };
@@ -196,7 +197,9 @@ export default function EmployeesPage() {
 
       <section className="card p-4 overflow-x-auto">
         {loading ? (
-          <p style={{ fontSize: 13, color: 'var(--color-neutral-600)' }}>{t('common.loading')}</p>
+          <div style={{ minHeight: 220 }}>
+            {Array.from({ length: 4 }, (_, i) => <SkeletonRow key={i} avatar lines={2} trailing />)}
+          </div>
         ) : filtered.length === 0 ? (
           <p style={{ fontSize: 13, color: 'var(--color-neutral-600)' }}>{t('employees.noEmployees')}</p>
         ) : (

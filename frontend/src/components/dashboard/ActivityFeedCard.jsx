@@ -4,6 +4,7 @@ import { formatDistanceToNow } from 'date-fns';
 import dashboardService from '../../services/dashboardService';
 import { withLocale } from '../../utils/dateLocale';
 import Icon from '../Icon';
+import { SkeletonRows } from '../Skeleton';
 
 const ACTION_ICON = {
   LOGIN: 'log-in',
@@ -54,7 +55,7 @@ export default function ActivityFeedCard({ className = '' }) {
       </div>
 
       {loading ? (
-        <p style={{ fontSize: 13, color: 'var(--color-neutral-600)' }}>{t('common.loading')}</p>
+        <SkeletonRows count={5} avatar={false} trailing={false} />
       ) : activity.length === 0 ? (
         <p style={{ fontSize: 13, color: 'var(--color-neutral-600)' }}>{t('dashboard.noActivity')}</p>
       ) : (

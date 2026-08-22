@@ -5,6 +5,7 @@ import { geofenceService } from '../services/geofenceService';
 import { attendanceService } from '../services/attendanceService';
 import { userService } from '../services/userService';
 import Icon from '../components/Icon';
+import { Skeleton } from '../components/Skeleton';
 
 const emptyForm = { name: '', address: '', latitude: '', longitude: '', radiusMeters: 500, description: '', isActive: true };
 
@@ -130,7 +131,22 @@ export default function GeofencesPage() {
             <Icon name="plus" className="w-4 h-4" />{t('geofence.addLocation')}
           </button>
           {loading ? (
-            <p style={{ fontSize: 13, color: 'var(--color-neutral-600)' }}>{t('common.loading')}</p>
+            Array.from({ length: 2 }, (_, i) => (
+              <div key={i} className="card">
+                <div className="flex items-baseline justify-between">
+                  <Skeleton w={110} h={18} /><Skeleton w={58} h={18} style={{ borderRadius: 999 }} />
+                </div>
+                <Skeleton w={140} h={10} />
+                <div className="flex items-center gap-2 mt-1">
+                  <Skeleton w={54} h={10} style={{ flex: 'none' }} />
+                  <Skeleton h={6} style={{ borderRadius: 999 }} />
+                  <Skeleton w={40} h={10} style={{ flex: 'none' }} />
+                </div>
+                <div className="pt-2 mt-1" style={{ borderTop: '1px solid color-mix(in srgb, var(--color-text) 8%, transparent)' }}>
+                  <Skeleton w="70%" h={10} />
+                </div>
+              </div>
+            ))
           ) : locations.length === 0 ? (
             <p style={{ fontSize: 13, color: 'var(--color-neutral-600)' }}>{t('geofence.noLocations')}</p>
           ) : (
